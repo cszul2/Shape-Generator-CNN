@@ -1,1 +1,1 @@
-# CNN-MLP-Shapes
+# Shape Generator
