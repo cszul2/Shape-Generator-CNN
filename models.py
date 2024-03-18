@@ -3,9 +3,12 @@ import torch.optim
 import torch.nn.functional
 
 class BasicCNN(torch.nn.Module):
-    def __init__(self, learningRate=0.001, momentum=0.9, imageHeight=None, imageWidth=None):
+    def __init__(self, learningRate=0.001, momentum=0.9, inputSize=None):
         super().__init__()
         self.convLayer1 = torch.nn.Conv2d(3, 6, 5)
+        print(self.convLayer1.padding)
+        print(self.convLayer1.kernel_size)
+        print(self.convLayer1.stride)
         self.pool = torch.nn.MaxPool2d(2,2)
         self.convLayer2 = torch.nn.Conv2d(6, 16, 5)
         print(self.convLayer2.padding)
