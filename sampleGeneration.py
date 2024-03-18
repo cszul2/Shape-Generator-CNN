@@ -13,8 +13,14 @@ class Sample:
     def showSample(self):
         self.background.show()
 
+    def saveSample(self, filename=None):
+        if filename is None:
+            self.background.save(self.sampleType+".png")
+        else:
+            self.background.save(filename)
+
     def makeNumpyVersion(self):
-        self.sample = numpy.asarray(self.background)
+        self.sample = numpy.array(self.background)
 
     def makeBackground(self, backgroundSize=(150,150), backgroundColor=(255,255,255)):
         self.background = Image.new("RGB", size=backgroundSize, color=backgroundColor)
