@@ -5,17 +5,11 @@ import torch.nn.functional
 class BasicCNN(torch.nn.Module):
     def __init__(self, learningRate=0.001, momentum=0.9, inputSize=None):
         super().__init__()
-        self.convLayer1 = torch.nn.Conv2d(3, 6, 5)
-        print(self.convLayer1.padding)
-        print(self.convLayer1.kernel_size)
-        print(self.convLayer1.stride)
-        self.pool = torch.nn.MaxPool2d(2,2)
-        self.convLayer2 = torch.nn.Conv2d(6, 16, 5)
-        print(self.convLayer2.padding)
-        print(self.convLayer2.kernel_size)
-        print(self.convLayer2.stride)
-        #[(InputVolume−KernelSize+2*Padding)/Stride]+1
-        self.fullyConnectedLayer1 = torch.nn.Linear(16*5*5, 120) 
+        #((InputVolume−KernelSize+2*Padding)/Stride)+1
+        self.convLayer1 = torch.nn.Conv2d(3, 6, 5) #Output Size = 150-5+1=146
+        self.pool = torch.nn.MaxPool2d(2,2) #Output Size = (146-2)/2+1=73
+        self.convLayer2 = torch.nn.Conv2d(6, 16, 5) #Output Size = 73-5+1=69
+        self.fullyConnectedLayer1 = torch.nn.Linear(18496, 120) 
         self.fullyConnectedLayer2 = torch.nn.Linear(120, 84)
         self.fullyConnectedLayer3 = torch.nn.Linear(84, 2)
 
