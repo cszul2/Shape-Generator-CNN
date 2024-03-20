@@ -7,7 +7,7 @@ class BasicCNN(torch.nn.Module):
         super().__init__()
         #((InputVolume−KernelSize+2*Padding)/Stride)+1
         self.convLayer1 = torch.nn.Conv2d(3, 6, 5) #Output Size = 150-5+1=146
-        self.pool = torch.nn.MaxPool2d(2,2) #Output Size = (146-2)/2+1=73
+        self.pool = torch.nn.MaxPool2d(2, 2) #Output Size = (146-2)/2+1=73
         self.convLayer2 = torch.nn.Conv2d(6, 16, 5) #Output Size = 73-5+1=69
         self.fullyConnectedLayer1 = torch.nn.Linear(18496, 120) 
         self.fullyConnectedLayer2 = torch.nn.Linear(120, 84)

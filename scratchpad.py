@@ -7,6 +7,7 @@ import DataPreprocessing
 import matplotlib.pyplot
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
+from torch.utils.tensorboard import SummaryWriter
 from sklearn.model_selection import train_test_split
 
 samples = list()
@@ -16,7 +17,12 @@ testingLabelsList = list()
 testingFeaturesList = list()
 classes = ["Ellipse", "Square"]
 
-for i in range(10):
+if torch.cuda.is_available():
+    device = torch.device("cuda:0")
+else:
+    device = torch.device("cpu")
+
+for i in range(100):
     for type in classes:
         sample = SampleGeneration.Sample(type)
         samples.append(sample)
@@ -42,44 +48,39 @@ testingData = DataPreprocessing.ShapeDataset(testingLabelsList, testingFeaturesL
 trainingDataLoader = DataLoader(trainingData, batch_size=4, shuffle=True)
 testingDataLoader = DataLoader(testingData, batch_size=4, shuffle=True)
 
-#trainingFeatures, trainingLabels = next(iter(trainingDataLoader))
-#print(f"Feature batch shape: {trainingFeatures.size()}")
-#print(f"Labels batch shape: {len(trainingLabels)}")
-#img = trainingFeatures[0].squeeze()
-#label = trainingLabels[0]
-#matplotlib.pyplot.imshow(numpy.transpose(img, (1,2,0)), cmap="gray")
-#matplotlib.pyplot.show()
-#print(f"Label: {label}")
-
 # %%
 model = Models.BasicCNN()
-model.cuda()
+model.to(device)
+
 for epoch in range(10):
     runningLoss = 0.0
     for index, data in enumerate(trainingDataLoader, 0):
         trainingFeatures, trainingLabels = data
+        trainingFeatures = trainingFeatures.to(device)
+        trainingLabels = trainingLabels.to(device)
         model.optimizer.zero_grad()
-        outputs = model(trainingFeatures.cuda())
-        loss = model.criterion(outputs, trainingLabels.cuda())
+        outputs = model(trainingFeatures)
+        loss = model.criterion(outputs, trainingLabels)
         loss.backward()
         model.optimizer.step()
         runningLoss += loss.item()
         if index % 2 == 1:
             print(f"[{epoch+1}, {index+1}] Loss: {runningLoss/20:.3f}")
 print("Finished")
+
 # %%
 correct = 0
 total = 0
-# since we're not training, we don't need to calculate the gradients for our outputs
 with torch.no_grad():
     for data in testingDataLoader:
         images, labels = data
-        # calculate outputs by running images through the network
-        outputs = model(images.cuda())
+        images = images.to(device)
+        labels = labels.to(device)
+        outputs = model(images)
         # the class with the highest energy is what we choose as prediction
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
-        correct += (predicted == labels.cuda()).sum().item()
+        correct += (predicted == labels).sum().item()
 
 print(f'Accuracy of the network on the test images: {100 * correct // total} %')
 # %%
