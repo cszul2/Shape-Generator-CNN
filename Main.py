@@ -1,3 +1,5 @@
+import torch
+import Models
 import SampleGeneration
 import DataPreprocessing
 from torch.utils.data import DataLoader
@@ -7,6 +9,11 @@ from sklearn.model_selection import train_test_split
 numberOfEachSampleType = 100
 testSizePercentage = 0.25
 batchSize = 4
+
+if torch.cuda.is_available():
+    device = torch.device("cuda:0")
+else:
+    device = torch.device("cpu")
 
 samples = list()
 trainingLabelsList = list()
@@ -23,10 +30,15 @@ trainingSet, testingSet = train_test_split(samples, test_size=testSizePercentage
 
 for sample in trainingSet:
     trainingFeaturesList.append(sample.sample)
-    trainingLabelsList.append(sample.sampleType)
+    for index, item in enumerate(classes):
+        if item == sample.sampleType:
+            trainingLabelsList.append(index)
+
 for sample in testingSet:
     testingFeaturesList.append(sample.sample)
-    testingLabelsList.append(sample.sampleType)
+    for index, item in enumerate(classes):
+        if item == sample.sampleType:
+            testingLabelsList.append(index)
 
 trainingData = DataPreprocessing.ShapeDataset(trainingLabelsList, trainingFeaturesList, 
                                               transform=ToTensor())
@@ -35,3 +47,6 @@ testingData = DataPreprocessing.ShapeDataset(testingLabelsList, testingFeaturesL
 
 trainingDataLoader = DataLoader(trainingData, batch_size=batchSize, shuffle=True)
 testingDataLoader = DataLoader(testingData, batch_size=batchSize, shuffle=True)
+
+model = Models.BasicCNN()
+model.to(device)
