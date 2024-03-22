@@ -8,7 +8,9 @@ from sklearn.model_selection import train_test_split
 
 numberOfEachSampleType = 100
 testSizePercentage = 0.25
+numberOfEpochs = 10
 batchSize = 4
+
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
@@ -50,3 +52,31 @@ testingDataLoader = DataLoader(testingData, batch_size=batchSize, shuffle=True)
 
 model = Models.BasicCNN()
 model.to(device)
+for epoch in range(numberOfEpochs):
+    runningLoss = 0.0
+    for index, data in enumerate(trainingDataLoader, 0):
+        trainingFeatures, trainingLabels = data
+        trainingFeatures = trainingFeatures.to(device)
+        trainingLabels = trainingLabels.to(device)
+        model.optimizer.zero_grad()
+        outputs = model(trainingFeatures)
+        loss = model.criterion(outputs, trainingLabels)
+        loss.backward()
+        model.optimizer.step()
+        runningLoss += loss.item()
+        if index % 2 == 1:
+            print(f"[{epoch+1}, {index+1}] Loss: {runningLoss/20:.3f}")
+print("Training Finished")
+
+correct = 0
+total = 0
+with torch.no_grad():
+    for data in testingDataLoader:
+        images, labels = data
+        images = images.to(device)
+        labels = labels.to(device)
+        outputs = model(images)
+        _, predicted = torch.max(outputs.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+print(f'Accuracy of CNN on test images: {100 * correct // total} %')
