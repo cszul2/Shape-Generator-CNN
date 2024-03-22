@@ -77,7 +77,6 @@ with torch.no_grad():
         images = images.to(device)
         labels = labels.to(device)
         outputs = model(images)
-        # the class with the highest energy is what we choose as prediction
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
