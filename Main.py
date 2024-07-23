@@ -1,15 +1,17 @@
 import torch
+import mlflow
 import Models
 import SampleGeneration
 import DataPreprocessing
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
-numberOfEachSampleType = 100
-testSizePercentage = 0.25
-numberOfEpochs = 10
-batchSize = 4
+parameters = {"numberOfEachSampleType": 100,
+              "testSizePercentage": 0.25,
+              "numberOfEpochs": 10,
+              "batchSize": 4}
 
 
 if torch.cuda.is_available():
@@ -24,35 +26,39 @@ testingLabelsList = list()
 testingFeaturesList = list()
 classes = ["Ellipse", "Square"]
 
-for i in range(numberOfEachSampleType):
+for i in range(parameters["numberOfEachSampleType"]):
     for type in classes:
         sample = SampleGeneration.Sample(type)
         samples.append(sample)
-trainingSet, testingSet = train_test_split(samples, test_size=testSizePercentage)
-
+trainingSet, testingSet = train_test_split(samples, 
+                                           test_size=parameters["testSizePercentage"])
 for sample in trainingSet:
     trainingFeaturesList.append(sample.sample)
     for index, item in enumerate(classes):
         if item == sample.sampleType:
             trainingLabelsList.append(index)
-
 for sample in testingSet:
     testingFeaturesList.append(sample.sample)
     for index, item in enumerate(classes):
         if item == sample.sampleType:
             testingLabelsList.append(index)
 
-trainingData = DataPreprocessing.ShapeDataset(trainingLabelsList, trainingFeaturesList, 
+trainingData = DataPreprocessing.ShapeDataset(trainingLabelsList, 
+                                              trainingFeaturesList, 
                                               transform=ToTensor())
-testingData = DataPreprocessing.ShapeDataset(testingLabelsList, testingFeaturesList, 
+testingData = DataPreprocessing.ShapeDataset(testingLabelsList, 
+                                             testingFeaturesList, 
                                              transform=ToTensor())
-
-trainingDataLoader = DataLoader(trainingData, batch_size=batchSize, shuffle=True)
-testingDataLoader = DataLoader(testingData, batch_size=batchSize, shuffle=True)
+trainingDataLoader = DataLoader(trainingData, 
+                                batch_size=parameters["batchSize"], 
+                                shuffle=True)
+testingDataLoader = DataLoader(testingData, 
+                               batch_size=parameters["batchSize"],
+                               shuffle=True)
 
 model = Models.BasicCNN()
 model.to(device)
-for epoch in range(numberOfEpochs):
+for epoch in range(parameters["numberOfEpochs"]):
     runningLoss = 0.0
     for index, data in enumerate(trainingDataLoader, 0):
         trainingFeatures, trainingLabels = data
@@ -74,9 +80,11 @@ with torch.no_grad():
     for data in testingDataLoader:
         images, labels = data
         images = images.to(device)
-        labels = labels.to(device)
+        #labels = labels.to(device)
+        labels = labels.cpu()
         outputs = model(images)
         _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
-print(f'Accuracy of CNN on test images: {100 * correct // total} %')
+        accuracy = accuracy_score(labels, predicted.cpu())
+        #total += labels.size(0)
+        #correct += (predicted == labels).sum().item()
+print(f'Accuracy of CNN on test images: {accuracy*100}%')
